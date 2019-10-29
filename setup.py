@@ -1,4 +1,4 @@
-import os
+# -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
 
 exec(open('abs/version.py').read())
