@@ -4,7 +4,9 @@
 """
 
 #import numpy as np
+from abs.tools.icy_decorator import icy
 
+@icy
 class ABS(object):
     
     def __init__(self, filename, nside, lmax, bin_width):
