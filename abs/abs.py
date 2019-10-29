@@ -3,7 +3,7 @@
   
 """
 
-import numpy as np
+#import numpy as np
 
 class ABS(object):
     
@@ -32,4 +32,16 @@ class ABS(object):
             the bin width of angular modes
             
         """
+        self.filename = filename
+        #self.nside = nside
+        #self.lmax = lmax
+        #self.bin_width = bin_width
         
+    @property
+    def filename(self):
+        return self._filename
+    
+    @filename.setter
+    def filename(self, filename):
+        assert isinstance(filename, str)
+        self._filename = filename
