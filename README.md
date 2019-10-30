@@ -14,6 +14,16 @@ This is a readme for ABS foreground removal method, which is a part of AliCPT pi
 
 ## Quick install
 
+* Pip
+
+``` pip install abspy ```
+
+* Source code 
+
+In the source directory, excute following command:
+
+``` python setup.py install [--user] ```
+
 ## Turtorial 
 
 
