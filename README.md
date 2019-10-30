@@ -7,9 +7,10 @@ This is a readme for ABS foreground removal method, which is a part of AliCPT pi
 
 ## Requirements
 
-* `Python <http://www.python.org>`_ 2.7, 3.5, or 3.6
+* [Python](http://www.python.org) 2.7, 3.5, or 3.6
 
-* `Numpy <http://numpy.scipy.org/>`
+* [Numpy](http://numpy.scipy.org/)
+
 
 ## Quick install
 
