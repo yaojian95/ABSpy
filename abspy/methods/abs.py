@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-  
+the ABS separator class
 """
 
 import logging as log
 import numpy as np
-from tools.icy_decorator import icy
+from abspy.tools.icy_decorator import icy
 
 
 @icy
-class ABS(object):
+class abssep(object):
     
     def __init__(self, total_ps, noise_ps, noise_ps_rms, nside, lbin, lmax=None, shift=10.0, cut=1.0):
         """
-        ABS class initialization function
-        
+        ABS separator class initialization function
         
         parameters:
         -----------
@@ -53,12 +52,15 @@ class ABS(object):
             
         """
         log.debug('instantiating ABS class')
-        self.totoal_ps = total_ps
-        self.noise_ps = noise_ps
-        self.noise_ps_rms = noise_ps_rms
+        #
         self.nside = nside
         self.lmax = lmax
         self.lbin = lbin
+        #
+        self.total_ps = total_ps
+        self.noise_ps = noise_ps
+        self.noise_ps_rms = noise_ps_rms
+        #
         self.shift = shift
         self.cut = cut
         
@@ -93,24 +95,6 @@ class ABS(object):
     @property
     def cut(self):
         return self._cut
-    
-    @total_ps.setter
-    def total_ps(self, total_ps):
-        assert isinstance(total_ps, (list,tuple,np.ndarray))
-        self._total_ps = total_ps
-        log.debug('total PS read')
-        
-    @noise_ps.setter
-    def noise_ps(self, noise_ps):
-        assert isinstance(noise_ps, (list,tuple,np.ndarray))
-        self._noise_ps = noise_ps
-        log.debug('noise PS read')
-        
-    @noise_ps_rms.setter
-    def noise_ps_rms(self, noise_ps_rms):
-        assert isinstance(noise_ps_rms, (list,tuple,np.ndarray))
-        self._noise_ps_rms = noise_ps_rms
-        log.debug('noise PS RMS read')
         
     @nside.setter
     def nside(self, nside):
@@ -119,13 +103,6 @@ class ABS(object):
         self._nside = nside
         log.debug('HEALPix Nside set as '+str(self._nside))
         
-    @lbin.setter
-    def lbin(self, lbin):
-        assert isinstance(lbin, int)
-        assert (lbin > 0 and lbin < self._lmax)
-        self._lbin = lbin
-        log.debug('angular mode bin width set as '+str(self._lbin))
-
     @lmax.setter
     def lmax(self, lmax):
         if lmax is not None:
@@ -135,7 +112,35 @@ class ABS(object):
         else:
             self._lmax = 3*self._nside - 1
         log.debug('angular mode maximum set as '+str(self._lmax))
-            
+        
+    @lbin.setter
+    def lbin(self, lbin):
+        assert isinstance(lbin, int)
+        assert (lbin > 0 and lbin < self._lmax)
+        self._lbin = lbin
+        log.debug('angular mode bin width set as '+str(self._lbin))
+        
+    @total_ps.setter
+    def total_ps(self, total_ps):
+        assert isinstance(total_ps, (list,tuple,np.ndarray))
+        assert (len(total_ps) >= self._lmax)
+        self._total_ps = total_ps
+        log.debug('total PS read')
+        
+    @noise_ps.setter
+    def noise_ps(self, noise_ps):
+        assert isinstance(noise_ps, (list,tuple,np.ndarray))
+        assert (len(noise_ps) >= self._lmax)
+        self._noise_ps = noise_ps
+        log.debug('noise PS read')
+        
+    @noise_ps_rms.setter
+    def noise_ps_rms(self, noise_ps_rms):
+        assert isinstance(noise_ps_rms, (list,tuple,np.ndarray))
+        assert (len(noise_ps_rms) >= self._lmax)
+        self._noise_ps_rms = noise_ps_rms
+        log.debug('noise PS RMS read')
+        
     @shift.setter
     def shift(self, shift):
         assert isinstance(shift, float)
