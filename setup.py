@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
 
-exec(open('abs/version.py').read())
+exec(open('abspy/version.py').read())
 
-setup(name="abs",
+setup(name="abspy",
       version=__version__,
       description="Analytical method of Blind Separation",
       license="GPLv3",
-      url="https://github.com/gioacchinowang/ABS",
+      url="https://github.com/gioacchinowang/ABSpy",
       packages=find_packages(),
       dependency_links=[],
       python_requires='>=3.5',
