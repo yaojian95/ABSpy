@@ -29,7 +29,14 @@ class TestSeparator(unittest.TestCase):
 
     def test_bindl(self):
         test_cl = list(np.random.rand(128))
-        test_dl = abssep.bindl(test_cl, 100, 3)
+        test_cl_noise = list(np.random.rand(128))
+        test_cl_noiseRMS = list(np.random.rand(128))
+        test_sep = abssep(test_cl,
+                          test_cl_noise,
+                          test_cl_noiseRMS,
+                          3,
+                          lmax=100)
+        test_ell, test_dl = test_sep.bindl(test_cl)
         for i in range(len(test_cl)):
             test_cl[i] *= 0.5*i*(i+1)/np.pi
         check_dl = [np.mean(test_cl[0:34]),
@@ -37,6 +44,8 @@ class TestSeparator(unittest.TestCase):
                     np.mean(test_cl[67:100])]
         for i in range(len(check_dl)):
                 self.assertAlmostEqual(test_dl[i], check_dl[i])
+        self.assertListEqual(test_ell, [17.0,50.5,83.5])
+
 
 if __name__ == '__main__':
     unittest.main()

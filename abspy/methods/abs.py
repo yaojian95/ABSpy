@@ -49,7 +49,7 @@ class abssep(object):
             signal to noise ratio threshold for information extraction
             
         """
-        log.debug('instantiating ABS class')
+        log.debug('@ abs::__init__')
         #
         self.total_ps = total_ps
         self.noise_ps = noise_ps
@@ -141,7 +141,7 @@ class abssep(object):
         self._cut = cut
         log.debug('signal to noise threshold set as '+str(self._cut))
 
-    def bindl(cl, lmax, lbin):
+    def bindl(self, cl):
         """
         bin average of power-spectrum Cl and convert it into Dl
         
@@ -151,27 +151,24 @@ class abssep(object):
         cl
             power spectrum
             
-        lmax
-            maximum angular mode
-            
-        lbin
-            angular mode bin for averaging
-            
         return
         ------
-        Dl with bin average
+        central angular modes position, list
+        and
+        Dl with bin average, list
         """
+        log.debug('@ abs::bindl')
         assert isinstance(cl, (list,tuple))
-        assert (lmax <= len(cl))
-        lres = lmax%lbin
-        lmod = lmax//lbin
+        lres = self._lmax%self._lbin
+        lmod = self._lmax//self._lbin
+        lnew = list()
         result = list()
         _cl = deepcopy(cl)
-        for i in range(lmax):
+        for i in range(self._lmax):
             _cl[i] *= 0.5*i*(i+1)/np.pi
-        for i in range(lbin):
+        for i in range(self._lbin):
             begin = min(lres,i)+i*lmod
             end = min(lres,i) + (i+1)*lmod + int(i < lres)
+            lnew.append(0.5*(begin+end))
             result.append(mean(_cl[begin:end]))
-        return result
-
+        return lnew, result
