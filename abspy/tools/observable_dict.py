@@ -7,7 +7,7 @@ Measurements and Masks, which can be used to store:
     * mask "maps" (but actually mask lists)
 
 Conventions for observables entries
-    * **Synchrotron emission**: `('sync',str(freq),str(pix),X)`
+    * **Synchrotron emission**: `('sync',str(freq),str(Healpix-Nside),X)`
         where X stands for:
             * 'I' - total intensity (in unit K-cmb)
             * 'Q' - Stokes Q (in unit K-cmb, IAU convention)
@@ -53,7 +53,7 @@ class ObservableDict(object):
         ----------
         name : str tuple
             Should follow the convention:
-            ``(data-name,str(data-freq),str(data-Nside/size),str(ext))``.
+            ``(data-name,str(data-freq),str(Healpix-Nside/angular-modes),str(ext))``.
             If data is independent from frequency, set 'nan'.
             `ext` can be 'I','Q','U','PI','PA', 'nan' or other customized tags.
         data
@@ -88,7 +88,7 @@ class Masks(ObservableDict):
         ----------
         name : str tuple
             Should follow the convention:
-            ``(data-name, str(data-freq), str(data-Nside), str(ext))``.
+            ``(data-name, str(data-freq), str(Healpix-Nside), str(ext))``.
             If data is independent from frequency, set 'nan'.
             `ext` can be 'I','Q','U','PI','PA', 'nan' or other customized tags.
         data : list, tuple, numpy.ndarray
@@ -115,7 +115,7 @@ class Measurements(ObservableDict):
         ----------
         name : str tuple
             Should follow the convention:
-            ``(data-name, str(data-freq), str(data-Nside/size), _str(ext))``.
+            ``(data-name, str(data-freq), str(Healpix-Nside), _str(ext))``.
             If data is independent from frequency, set 'nan'.
             `ext` can be 'I','Q','U','PI','PA', 'nan' or other customized tags.
         data : list, tuple, numpy.ndarray
@@ -139,3 +139,30 @@ class Measurements(ObservableDict):
                     for ptr in range(len(msk)):
                         masked[ptr] *= msk[ptr]
                     self._archive.update({name: masked})
+
+
+@icy
+class Spectra(ObservableDict):
+    
+    def __init__(self):
+        super(Spectra, self).__init__()
+        
+    def append(self, name, new):
+        """
+        Adds/updates name and data
+
+        Parameters
+        ----------
+        name : str tuple
+            Should follow the convention:
+            ``(data-name, str(data-freq), str(angular-modes), _str(ext))``.
+            If data is independent from frequency, set 'nan'.
+            `ext` can be 'I','Q','U','PI','PA', 'nan' or other customized tags.
+        data : list, tuple, numpy.ndarray
+            Healpix map to be appended
+        """
+        log.debug('@ observable_dict::Measurements::append')
+        assert (len(name) == 4)
+        assert isinstance(new, (list,tuple,np.ndarray))
+        assert (len(new) == np.uint(name[2]))
+        self._archive.update({name: list(new)})
