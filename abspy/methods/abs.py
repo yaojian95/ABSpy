@@ -20,15 +20,15 @@ class abssep(object):
         -----------
         
         total_ps:
-            list, tuple or numpy.array
+            list, tuple
             the total power-sepctrum
             
         noise_ps:
-            list, tuple or numpy.array
+            list, tuple
             the noise power-sepctrum
             
         noise_ps_rms:
-            list, tuple or numpy.array
+            list, tuple
             RMS of the noise power-sepctrum
             
         lbin:
@@ -149,10 +149,11 @@ class abssep(object):
         ----------
         
         cl
+            list, tuple
             power spectrum
             
-        return
-        ------
+        returns
+        -------
         central angular modes position, list
         and
         Dl with bin average, list
