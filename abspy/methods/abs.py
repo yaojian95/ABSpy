@@ -5,35 +5,47 @@ the ABS separator class
 import logging as log
 import numpy as np
 from copy import deepcopy
-from statistics import mean
 from abspy.tools.icy_decorator import icy
 
 
 @icy
 class abssep(object):
     
-    def __init__(self, total_ps, noise_ps, noise_ps_rms, lbin, lmax=None, shift=10.0, cut=1.0):
+    def __init__(self, total_ps, noise_ps, noise_rms, lbin, llist=None, lmax=None, shift=10.0, cut=1.0):
         """
         ABS separator class initialization function
         
-        parameters:
+        Parameters:
         -----------
         
         total_ps:
-            list, tuple
-            the total power-sepctrum
+            numpy.ndarray
+            the total CROSS power-sepctrum matrix
+            with global size (N_modes, N_freq, N_freq)
+            * N_freq: number of frequency bands
+            * N_modes: number of angular modes
             
         noise_ps:
-            list, tuple
-            the noise power-sepctrum
+            numpy.ndarray
+            the ensemble averaged (instrumental) noise CROSS power-sepctrum
+            with global size (N_modes, N_freq, N_freq)
+            * N_freq: number of frequency bands
+            * N_modes: number of angular modes
             
-        noise_ps_rms:
-            list, tuple
-            RMS of the noise power-sepctrum
+        noise_rms:
+            numpy.ndarray
+            the RMS of ensemble (instrumental) noise AUTO power-spectrum
+            with global size (N_modes, N_freq)
+            * N_freq: number of frequency bands
+            * N_modes: number of angular modes
             
         lbin:
             unsigned integer
             the bin width of angular modes
+            
+        llist:
+            list, tuple
+            the list of angular modes of given power spectra
             
         lmax:
             unsigned integer
@@ -53,10 +65,11 @@ class abssep(object):
         #
         self.total_ps = total_ps
         self.noise_ps = noise_ps
-        self.noise_ps_rms = noise_ps_rms
+        self.noise_rms = noise_rms
         #
         self.lmax = lmax
         self.lbin = lbin
+        self.llist = llist
         #
         self.shift = shift
         self.cut = cut
@@ -70,12 +83,16 @@ class abssep(object):
         return self._noise_ps
     
     @property
-    def noise_ps_rms(self):
-        return self._noise_ps_rms
+    def noise_rms(self):
+        return self._noise_rms
     
     @property
     def lbin(self):
         return self._lbin
+        
+    @property
+    def llist(self):
+        return self._llist
     
     @property
     def lmax(self):
@@ -88,27 +105,36 @@ class abssep(object):
     @property
     def cut(self):
         return self._cut
+    
+    @property
+    def resampling(self):
+        return self._resampling
         
     @total_ps.setter
     def total_ps(self, total_ps):
-        assert isinstance(total_ps, (list,tuple))
-        self._ps_lmax = len(total_ps)
+        assert isinstance(total_ps, np.ndarray)
+        self._ps_lmax = total_ps.shape[0]
+        self._ps_fmax = total_ps.shape[1]
+        assert (total_ps.shape[1] == total_ps.shape[2])
         self._total_ps = total_ps
-        log.debug('total PS read')
+        log.debug('total cross-PS read')
         
     @noise_ps.setter
     def noise_ps(self, noise_ps):
-        assert isinstance(noise_ps, (list,tuple))
-        assert (len(noise_ps) == self._ps_lmax)
+        assert isinstance(noise_ps, np.ndarray)
+        assert (noise_ps.shape[0] == self._ps_lmax)
+        assert (noise_ps.shape[1] == self._ps_fmax)
+        assert (noise_ps.shape[1] == noise_ps.shape[2])
         self._noise_ps = noise_ps
-        log.debug('noise PS read')
+        log.debug('noise cross-PS read')
         
-    @noise_ps_rms.setter
-    def noise_ps_rms(self, noise_ps_rms):
-        assert isinstance(noise_ps_rms, (list,tuple))
-        assert (len(noise_ps_rms) == self._ps_lmax)
-        self._noise_ps_rms = noise_ps_rms
-        log.debug('noise PS RMS read')
+    @noise_rms.setter
+    def noise_rms(self, noise_rms):
+        assert isinstance(noise_rms, np.ndarray)
+        assert (self._ps_lmax == noise_rms.shape[0])
+        assert (self._ps_fmax == noise_rms.shape[1])
+        self._noise_rms = noise_rms
+        log.debug('noise RMS auto-PS read')
     
     @lmax.setter
     def lmax(self, lmax):
@@ -119,6 +145,18 @@ class abssep(object):
         else:
             self._lmax = self._ps_lmax
         log.debug('angular mode maximum set as '+str(self._lmax))
+        
+    @llist.setter
+    def llist(self, llist):
+        if llist is not None:
+            assert isinstance(llist, (list,tuple))
+            assert (len(llist) >= self._lbin)
+            self._llist = [x for x in llist if x <= self._lmax]
+            self._prebin = True  # with pre binned input
+        else:
+            self._llist = [*range(self._lmax)]
+            self._prebin = False
+        log.debug('angular modes list set as '+str(self._llist))
     
     @lbin.setter
     def lbin(self, lbin):
@@ -140,36 +178,154 @@ class abssep(object):
         assert (cut > 0)
         self._cut = cut
         log.debug('signal to noise threshold set as '+str(self._cut))
-
-    def bindl(self, cl):
+        
+    @resampling.setter
+    def resampling(self, resampling):
+        assert isinstance(resampling, int)
+        assert (resampling > 0)
+        self._resampling = resampling
+        log.debug('resampling size set as '+str(self._resampling))
+        
+    @property
+    def binell(self):
         """
-        bin average of power-spectrum Cl and convert it into Dl
+        central angular modes "ell" of binned average
         
-        parameters
-        ----------
-        
-        cl
-            list, tuple
-            power spectrum
-            
-        returns
+        Returns
         -------
-        central angular modes position, list
-        and
-        Dl with bin average, list
+        central angular modes position, numpy.ndarray
         """
-        log.debug('@ abs::bindl')
-        assert isinstance(cl, (list,tuple))
-        lres = self._lmax%self._lbin
-        lmod = self._lmax//self._lbin
+        log.debug('@ abs::binell')
         lnew = list()
-        result = list()
-        _cl = deepcopy(cl)
-        for i in range(self._lmax):
-            _cl[i] *= 0.5*i*(i+1)/np.pi
+        if (self._prebin):  # binned twice
+            _lsample_size = len(self._llist)
+        else:
+            _lsample_size = self._lmax
+        lres = _lsample_size%self._lbin
+        lmod = _lsample_size//self._lbin
+        # binned average for each single spectrum
         for i in range(self._lbin):
             begin = min(lres,i)+i*lmod
             end = min(lres,i) + (i+1)*lmod + int(i < lres)
-            lnew.append(0.5*(begin+end))
-            result.append(mean(_cl[begin:end]))
-        return lnew, result
+            lnew.append(0.5*(self._llist[begin]+self._llist[end-1]))
+        return lnew
+
+    def bincps(self, cps):
+        """
+        binned average of CROSS-power-spectrum and convert it into CROSS-Dl
+        
+        Parameters
+        ----------
+        
+        cps : numpy.ndarray
+            cross power spectrum
+            
+        Returns
+        -------
+        CROSS-Dl with bin average, numpy.ndarray
+        """
+        log.debug('@ abs::bincps')
+        assert isinstance(cps, np.ndarray)
+        assert (cps.shape[0] == self._ps_lmax)
+        assert (cps.shape[1] == self._ps_fmax)
+        assert (cps.shape[1] == cps.shape[2])
+        if (self._prebin):  # binned twice
+            _lsample_size = len(self._llist)
+        else:
+            _lsample_size = self._lmax
+        lres = _lsample_size%self._lbin
+        lmod = _lsample_size//self._lbin
+        result = np.empty((self._lbin, cps.shape[1], cps.shape[2]))
+        _cps = deepcopy(cps)
+        # convert Cl into Dl for each single spectrum
+        for i in range(_lsample_size):
+            _cps[i,:,:] *= 0.5*i*(i+1)/np.pi
+        # binned average for each single spectrum
+        for i in range(self._lbin):
+            begin = min(lres,i)+i*lmod
+            end = min(lres,i) + (i+1)*lmod + int(i < lres)
+            result[i,:,:] = np.mean(_cps[begin:end,:,:], axis=0)
+        return result
+    
+    def binaps(self, aps):
+        """
+        binned average of AUTO-power-spectrum Cl and convert it into AUTO-Dl
+        
+        Parameters
+        ----------
+        
+        aps : numpy.ndarray
+            auto power spectrum
+        
+        Returns
+        -------
+        AUTO-Dl with binned average, numpy.ndarray
+        """
+        log.debug('@ abs::binaps')
+        assert isinstance(aps, np.ndarray)
+        assert (aps.shape[0] == self._ps_lmax)
+        assert (aps.shape[1] == self._ps_fmax)
+        if (self._prebin):  # binned twice
+            _lsample_size = len(self._llist)
+        else:
+            _lsample_size = self._lmax
+        lres = _lsample_size%self._lbin
+        lmod = _lsample_size//self._lbin
+        result = np.empty((self._lbin, aps.shape[1]))
+        _aps = deepcopy(aps)
+        # convert Cl into Dl for each single spectrum
+        for i in range(_lsample_size):
+            _aps[i,:] *= 0.5*i*(i+1)/np.pi
+        # binned average for each single spectrum
+        for i in range(self._lbin):
+            begin = min(lres,i)+i*lmod
+            end = min(lres,i) + (i+1)*lmod + int(i < lres)
+            result[i,:] = np.mean(_aps[begin:end,:], axis=0)
+        return result
+    
+    def __call__(self, verbose=False):
+        """
+        ABS separator class call function
+        
+        Parameters
+        ----------
+        
+        verbose : bool
+        switch for verbose stdout
+        
+        Returns
+        -------
+        (list, list)
+        target angular mode values
+        target angular power spectrum for each angular mode bin
+        """
+        log.debug('@ abs::__call__')
+        # binned average
+        _Dl = self.bincps(self._total_ps)
+        _nDl = self.bincps(self._noise_ps)
+        _nrmsDl = self.binaps(self._noise_rms)
+        # prepare CMB f(ell, freq)
+        _f = np.ones(_nrmsDl.shape, dtype=np.float64)
+        _f /= _nrmsDl  # rescal f according to noise RMS
+        # Dl_ij = Dl_ij/sqrt(sigma_li,sigma_lj) + shift*f_li*f_lj
+        _Dl -= _nDl
+        for i in range(self._ps_fmax):
+            for j in range(self._ps_fmax):
+                _Dl[:,i,j] = _Dl[:,i,j]/np.sqrt(_nrmsDl[:,i]*_nrmsDl[:,j]) + self._shift*_f[:,i]*_f[:,j]
+        # find eign at each angular mode
+        _Dbl = list()
+        for ell in range(self._lbin):
+            # eigvec[:,i] corresponds to eigval[i]
+            eigval, eigvec = np.linalg.eig(_Dl[ell])
+            if verbose:
+                print ('@ angular mode',ell,'with eigen vals',eigval)
+            for i in range(self._ps_fmax):
+                eigvec[:,i] /= np.linalg.norm(eigvec[:,i])**2
+            _tmp = 0
+            for i in range(self._ps_fmax):
+                if eigval[i] >= self._cut:
+                    _G = np.dot(_f[ell], eigvec[:,i])
+                    _tmp += (_G**2/eigval[i])
+            _Dbl.append(1.0/_tmp - self._shift)
+        return (self.binell, _Dbl)
+        

@@ -55,7 +55,7 @@ class ObservableDict(object):
             Should follow the convention:
             ``(data-name,str(data-freq),str(Healpix-Nside/angular-modes),str(ext))``.
             If data is independent from frequency, set 'nan'.
-            `ext` can be 'I','Q','U','PI','PA', 'nan' or other customized tags.
+            `ext` can be 'I','Q','U' or other customized tags.
         data
             distributed/copied ndarray/Observable
         plain : bool
@@ -90,7 +90,7 @@ class Masks(ObservableDict):
             Should follow the convention:
             ``(data-name, str(data-freq), str(Healpix-Nside), str(ext))``.
             If data is independent from frequency, set 'nan'.
-            `ext` can be 'I','Q','U','PI','PA', 'nan' or other customized tags.
+            `ext` can be 'I','Q','U' or other customized tags.
         data : list, tuple, numpy.ndarray
             Healpix map to be appended
         """
@@ -115,9 +115,9 @@ class Measurements(ObservableDict):
         ----------
         name : str tuple
             Should follow the convention:
-            ``(data-name, str(data-freq), str(Healpix-Nside), _str(ext))``.
+            ``(data-name, str(data-freq), str(Healpix-Nside), str(ext))``.
             If data is independent from frequency, set 'nan'.
-            `ext` can be 'I','Q','U','PI','PA', 'nan' or other customized tags.
+            `ext` can be 'I','Q','U' or other customized tags.
         data : list, tuple, numpy.ndarray
             Healpix map to be appended
         """
@@ -142,27 +142,66 @@ class Measurements(ObservableDict):
 
 
 @icy
-class Spectra(ObservableDict):
+class Covariances(ObservableDict):
     
     def __init__(self):
-        super(Spectra, self).__init__()
+        super(Covariances, self).__init__()
         
     def append(self, name, new):
         """
         Adds/updates name and data
-
+        
         Parameters
         ----------
         name : str tuple
             Should follow the convention:
-            ``(data-name, str(data-freq), str(angular-modes), _str(ext))``.
+            ``(data-name, str(data-freq), str(Healpix-Nside), _str(ext))``.
             If data is independent from frequency, set 'nan'.
-            `ext` can be 'I','Q','U','PI','PA', 'nan' or other customized tags.
+            `ext` can be 'I','Q','U' or other customized tags.
         data : list, tuple, numpy.ndarray
             Healpix map to be appended
         """
-        log.debug('@ observable_dict::Measurements::append')
+        log.debug('@ observable_dict::Covariances::append')
         assert (len(name) == 4)
-        assert isinstance(new, (list,tuple,np.ndarray))
-        assert (len(new) == np.uint(name[2]))
+        assert isinstance(new, np.ndarray)
+        assert (len(new.shape) == 2)
+        assert (new.shape[0] == new.shape[1])
+        assert (new.shape[0] == 12*np.uint(name[2])**2)
         self._archive.update({name: list(new)})
+        
+    def apply_mask(self, mask_dict=None):
+        """
+        applying mask
+        by matching name tags of masks and covariance matrices
+        """
+        log.debug('@ observable_dict::Covariances::apply_mask')
+        if mask_dict is None:
+            pass
+        else:
+            for name, msk in mask_dict._archive.items():
+                if name in self._archive.keys():
+                    masked = deepcopy(self._archive[name])
+                    for ptr in range(len(msk)):
+                        masked[:,ptr] *= msk[ptr]
+                        masked[ptr,:] *= msk[ptr]
+                    self._archive.update({name: masked})
+                    
+    def apply_mask_drct(self, name, msk):
+        """
+        alternative way of applying mask
+        by deirectly assign the mask to the specific covariance matrix
+        instead of by matching name tags
+        
+        Parameters
+        ----------
+        name : ObservableDict name tag
+        
+        msk : numpy.ndarray
+        the mask map to be applied
+        """
+        log.debug('@ observabld_dict::Covariances::apply_mask_drct')
+        masked = deepcopy(self._archive[name])
+        for ptr in range(len(msk)):
+            masked[:,ptr] *= msk[ptr]
+            masked[ptr,:] *= msk[ptr]
+        self._archive.update({name: masked})

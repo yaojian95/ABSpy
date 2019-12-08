@@ -15,13 +15,6 @@ class TestObservableDicts(unittest.TestCase):
         local_arr = measuredict[('test', 'nan', '2', 'nan')]
         self.assertListEqual(local_arr, list(hrr))
         
-    def test_spectra_array(self):
-        specdict = Spectra()
-        hrr = np.random.rand(23)
-        specdict.append(('test', 'nan', '23', 'nan'), hrr)
-        local_arr = specdict[('test', 'nan', '23', 'nan')]
-        self.assertListEqual(local_arr, list(hrr))
-        
     def test_maskdict_append_array(self):
         msk = np.random.randint(0, 2, 48)
         mskdict = Masks()
