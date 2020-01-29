@@ -13,14 +13,14 @@ class TestObservableDicts(unittest.TestCase):
         hrr = np.random.rand(48)
         measuredict.append(('test', 'nan', '2', 'nan'), hrr)
         local_arr = measuredict[('test', 'nan', '2', 'nan')]
-        self.assertListEqual(local_arr, list(hrr))
+        self.assertListEqual(list(local_arr), list(hrr))
         
     def test_maskdict_append_array(self):
         msk = np.random.randint(0, 2, 48)
         mskdict = Masks()
         mskdict.append(('test', 'nan', '2', 'nan'), msk)
         local_msk = mskdict[('test', 'nan', '2', 'nan')]
-        self.assertListEqual(local_msk, list(msk))
+        self.assertListEqual(list(local_msk), list(msk))
     
     def test_meadict_apply_mask(self):
         msk = np.random.randint(0, 2, 48)
@@ -32,7 +32,7 @@ class TestObservableDicts(unittest.TestCase):
         meadict.apply_mask(mskdict)
         for i in range(len(arr)):
             arr[i] *= msk[i]
-        self.assertListEqual(meadict[('test', 'nan', '2', 'nan')], list(arr))
+        self.assertListEqual(list(meadict[('test', 'nan', '2', 'nan')]), list(arr))
         
         
 if __name__ == '__main__':
