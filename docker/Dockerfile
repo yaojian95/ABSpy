@@ -5,7 +5,7 @@ FROM ubuntu:latest
 RUN apt-get update
 RUN apt-get install -y --fix-missing build-essential
 RUN apt-get install -y --fix-missing git wget unzip vim python3 python3-pip python3-dev
-RUN pip3 install jupyter numpy scipy astropy healpy matplotlib progressbar seaborn
+RUN pip3 install jupyter numpy scipy astropy healpy matplotlib progressbar seaborn nbval
 
 RUN mkdir /home/lab
 WORKDIR /home/lab

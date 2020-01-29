@@ -1,0 +1,11 @@
+sudo: required
+services:
+  - docker
+
+script:
+  - docker build -t abspy/ci docker
+  - docker run abspy/ci bash -c "cd /home/lab/abspy; python3 tests/alltests.py"
+  - docker run abspy/ci bash -c "cd /home/lab/abspy/tutorials; pytest --nbval-lax"
+
+after_script:
+  - docker images
