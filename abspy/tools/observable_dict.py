@@ -22,10 +22,10 @@ Masking convention
     fully masked erea associated with pixel value 0
     fully unmasked area with pixel value 1
 """
+
 import numpy as np
 from copy import deepcopy
 import logging as log
-
 from abspy.tools.icy_decorator import icy
 
 
@@ -47,17 +47,20 @@ class ObservableDict(object):
 
     def append(self, name, data):
         """
-        Adds/updates name and data
+        Adds/updates name and data.
 
         Parameters
         ----------
-        name : str tuple
+        
+        name : string tuple
             Should follow the convention:
-            ``(data-name,str(data-freq),str(Healpix-Nside/angular-modes),str(ext))``.
+            ``(data-name,str(data-freq),str(HEALPix-Nside),str(ext))``.
             If data is independent from frequency, set 'nan'.
             `ext` can be 'I','Q','U' or other customized tags.
-        data
-            distributed/copied ndarray/Observable
+            
+        data : list, tuple, numpy.ndarray
+            Distributed/copied ndarray/Observable.
+            
         plain : bool
             If True, means unstructured data.
             If False (default case), means HEALPix-like sky map.
@@ -68,8 +71,9 @@ class ObservableDict(object):
         """
         Parameters
         ----------
-        mask_dict : imagine.observables.observable_dict.Masks
-            Masks object
+        
+        mask_dict : ObservableDict.Masks
+            Masks object.
         """
         pass
 
@@ -82,23 +86,25 @@ class Masks(ObservableDict):
 
     def append(self, name, new, plain=False):
         """
-        Adds/updates name and data
+        Adds/updates name and data.
 
         Parameters
         ----------
+        
         name : str tuple
             Should follow the convention:
-            ``(data-name, str(data-freq), str(Healpix-Nside), str(ext))``.
+            ``(data-name, str(data-freq), str(HEALPix-Nside), str(ext))``.
             If data is independent from frequency, set 'nan'.
             `ext` can be 'I','Q','U' or other customized tags.
+            
         data : list, tuple, numpy.ndarray
-            Healpix map to be appended
+            A Healpix map to be appended.
         """
-        log.debug('@ observable_dict::Masks::append')
+        log.debug('@ ObservableDict::Masks::append')
         assert (len(name) == 4)
         assert isinstance(new, (list,tuple,np.ndarray))
         assert (len(new) == 12*np.uint(name[2])**2)
-        self._archive.update({name: list(new)})
+        self._archive.update({name: np.array(new)})
 
 
 @icy
@@ -113,22 +119,33 @@ class Measurements(ObservableDict):
 
         Parameters
         ----------
+        
         name : str tuple
             Should follow the convention:
-            ``(data-name, str(data-freq), str(Healpix-Nside), str(ext))``.
+            ``(data-name, str(data-freq), str(HEALPix-Nside), str(ext))``.
             If data is independent from frequency, set 'nan'.
             `ext` can be 'I','Q','U' or other customized tags.
+            
         data : list, tuple, numpy.ndarray
             Healpix map to be appended
         """
-        log.debug('@ observable_dict::Measurements::append')
+        log.debug('@ ObservableDict::Measurements::append')
         assert (len(name) == 4)
         assert isinstance(new, (list,tuple,np.ndarray))
         assert (len(new) == 12*np.uint(name[2])**2)
-        self._archive.update({name: list(new)})
+        self._archive.update({name: np.array(new)})
     
     def apply_mask(self, mask_dict=None):
-        log.debug('@ observable_dict::Measurements::apply_mask')
+        """
+        Applying mask, by matching name tags of masks and measurements.
+        
+        Parameters
+        ----------
+        
+        mask_dict : ObservableDict.Masks
+            Masks object.
+        """
+        log.debug('@ ObservableDict::Measurements::apply_mask')
         if mask_dict is None:
             pass
         else:
@@ -153,28 +170,35 @@ class Covariances(ObservableDict):
         
         Parameters
         ----------
+        
         name : str tuple
             Should follow the convention:
-            ``(data-name, str(data-freq), str(Healpix-Nside), _str(ext))``.
+            ``(data-name, str(data-freq), str(HEALPix-Nside), _str(ext))``.
             If data is independent from frequency, set 'nan'.
             `ext` can be 'I','Q','U' or other customized tags.
-        data : list, tuple, numpy.ndarray
-            Healpix map to be appended
+            
+        new : numpy.ndarray
+            A covariance matrix to be appended.
         """
-        log.debug('@ observable_dict::Covariances::append')
+        log.debug('@ ObservableDict::Covariances::append')
         assert (len(name) == 4)
         assert isinstance(new, np.ndarray)
         assert (len(new.shape) == 2)
         assert (new.shape[0] == new.shape[1])
         assert (new.shape[0] == 12*np.uint(name[2])**2)
-        self._archive.update({name: list(new)})
+        self._archive.update({name: np.array(new)})
         
     def apply_mask(self, mask_dict=None):
         """
-        applying mask
-        by matching name tags of masks and covariance matrices
+        Applying mask, by matching name tags of masks and covariance matrices.
+        
+        Parameters
+        ----------
+        
+        mask_dict : ObservableDict.Masks
+            Masks object.
         """
-        log.debug('@ observable_dict::Covariances::apply_mask')
+        log.debug('@ ObservableDict::Covariances::apply_mask')
         if mask_dict is None:
             pass
         else:
@@ -188,16 +212,18 @@ class Covariances(ObservableDict):
                     
     def apply_mask_drct(self, name, msk):
         """
-        alternative way of applying mask
-        by deirectly assign the mask to the specific covariance matrix
-        instead of by matching name tags
+        An alternative way of applying mask,
+        by deirectly assign the mask to the specific covariance matrix,
+        instead of by matching name tags.
         
         Parameters
         ----------
-        name : ObservableDict name tag
+        
+        name : string tuple
+            ObservableDict name tag.
         
         msk : numpy.ndarray
-        the mask map to be applied
+            The mask map to be applied.
         """
         log.debug('@ observabld_dict::Covariances::apply_mask_drct')
         masked = deepcopy(self._archive[name])

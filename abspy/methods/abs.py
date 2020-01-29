@@ -1,5 +1,5 @@
 """
-the ABS separator class
+the ABS separator class.
 """
 
 import logging as log
@@ -13,53 +13,44 @@ class abssep(object):
     
     def __init__(self, total_ps, noise_ps, noise_rms, lbin, llist=None, lmax=None, shift=10.0, cut=1.0):
         """
-        ABS separator class initialization function
+        ABS separator class initialization function.
         
         Parameters:
         -----------
         
-        total_ps:
-            numpy.ndarray
-            the total CROSS power-sepctrum matrix
-            with global size (N_modes, N_freq, N_freq)
+        total_ps : numpy.ndarray
+            The total CROSS power-sepctrum matrix,
+            with global size (N_modes, N_freq, N_freq).
             * N_freq: number of frequency bands
             * N_modes: number of angular modes
             
-        noise_ps:
-            numpy.ndarray
-            the ensemble averaged (instrumental) noise CROSS power-sepctrum
-            with global size (N_modes, N_freq, N_freq)
+        noise_ps : numpy.ndarray
+            The ensemble averaged (instrumental) noise CROSS power-sepctrum,
+            with global size (N_modes, N_freq, N_freq).
             * N_freq: number of frequency bands
             * N_modes: number of angular modes
             
-        noise_rms:
-            numpy.ndarray
-            the RMS of ensemble (instrumental) noise AUTO power-spectrum
-            with global size (N_modes, N_freq)
+        noise_rms : numpy.ndarray
+            The RMS of ensemble (instrumental) noise AUTO power-spectrum,
+            with global size (N_modes, N_freq).
             * N_freq: number of frequency bands
             * N_modes: number of angular modes
             
-        lbin:
-            unsigned integer
-            the bin width of angular modes
+        lbin : unsigned integer
+            The bin width of angular modes.
             
-        llist:
-            list, tuple
-            the list of angular modes of given power spectra
+        llist : list, tuple
+            The list of angular modes of given power spectra.
             
-        lmax:
-            unsigned integer
-            the maximal angular modes
+        lmax : unsigned integer
+            The maximal angular modes.
             
-        shift:
-            double
-            global shift to the target power-spectrum
-            defined in Eq(3) of arXiv:1608.03707
+        shift : double
+            Global shift to the target power-spectrum,
+            defined in Eq(3) of arXiv:1608.03707.
             
-        cut:
-            positive double
-            signal to noise ratio threshold for information extraction
-            
+        cut : positive double
+            The threshold of signal to noise ratio, for information extraction.
         """
         log.debug('@ abs::__init__')
         #
@@ -189,11 +180,12 @@ class abssep(object):
     @property
     def binell(self):
         """
-        central angular modes "ell" of binned average
+        Central angular modes "ell" of binned average.
         
         Returns
         -------
-        central angular modes position, numpy.ndarray
+        
+        Central angular modes position : numpy.ndarray.
         """
         log.debug('@ abs::binell')
         lnew = list()
@@ -212,7 +204,7 @@ class abssep(object):
 
     def bincps(self, cps):
         """
-        binned average of CROSS-power-spectrum and convert it into CROSS-Dl
+        Binned average of CROSS-power-spectrum and convert it into CROSS-Dl.
         
         Parameters
         ----------
@@ -222,7 +214,8 @@ class abssep(object):
             
         Returns
         -------
-        CROSS-Dl with bin average, numpy.ndarray
+            
+        CROSS-Dl with bin average : numpy.ndarray
         """
         log.debug('@ abs::bincps')
         assert isinstance(cps, np.ndarray)
@@ -249,7 +242,7 @@ class abssep(object):
     
     def binaps(self, aps):
         """
-        binned average of AUTO-power-spectrum Cl and convert it into AUTO-Dl
+        Binned average of AUTO-power-spectrum Cl and convert it into AUTO-Dl.
         
         Parameters
         ----------
@@ -259,7 +252,8 @@ class abssep(object):
         
         Returns
         -------
-        AUTO-Dl with binned average, numpy.ndarray
+        
+        AUTO-Dl with binned average : numpy.ndarray
         """
         log.debug('@ abs::binaps')
         assert isinstance(aps, np.ndarray)
@@ -283,21 +277,14 @@ class abssep(object):
             result[i,:] = np.mean(_aps[begin:end,:], axis=0)
         return result
     
-    def __call__(self, verbose=False):
+    def __call__(self):
         """
-        ABS separator class call function
-        
-        Parameters
-        ----------
-        
-        verbose : bool
-        switch for verbose stdout
+        ABS separator class call function.
         
         Returns
         -------
-        (list, list)
-        target angular mode values
-        target angular power spectrum for each angular mode bin
+        
+        angular modes, target angular power spectrum : (list, list)
         """
         log.debug('@ abs::__call__')
         # binned average
@@ -316,9 +303,9 @@ class abssep(object):
         _Dbl = list()
         for ell in range(self._lbin):
             # eigvec[:,i] corresponds to eigval[i]
+            # note that eigen values may be complex
             eigval, eigvec = np.linalg.eig(_Dl[ell])
-            if verbose:
-                print ('@ angular mode',ell,'with eigen vals',eigval)
+            log.debug('@ abs::__call__, angular mode',self.binell[ell],'with eigen vals',eigval)
             for i in range(self._ps_fmax):
                 eigvec[:,i] /= np.linalg.norm(eigvec[:,i])**2
             _tmp = 0

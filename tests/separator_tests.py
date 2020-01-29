@@ -92,6 +92,7 @@ class TestSeparator(unittest.TestCase):
                     self.assertAlmostEqual(test_ndl[i,j,k], check_ndl[i,j,k])
     
     def test_abs(self):
+        np.random.seed(234)
         test_ccl = np.random.rand(128,3,3)
         test_ccl_noise = np.random.rand(128,3,3)*0.01
         test_ccl_noise_rms = np.random.rand(128,3)*0.001
@@ -101,7 +102,7 @@ class TestSeparator(unittest.TestCase):
                           test_ccl_noise_rms,
                           binsize,
                           lmax=100)
-        print(test_sep(True))
+        test_result = test_sep()
 
 if __name__ == '__main__':
     unittest.main()

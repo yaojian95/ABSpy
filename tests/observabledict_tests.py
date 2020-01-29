@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from abspy.tools.observable_dict import ObservableDict, Measurements, Masks, Spectra
+from abspy.tools.observable_dict import ObservableDict, Measurements, Masks
 
 class TestObservableDicts(unittest.TestCase):
     
