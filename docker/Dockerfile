@@ -10,7 +10,7 @@ RUN mkdir /home/lab
 WORKDIR /home/lab
 
 #NaMaster
-RUN apt-get install -y --fix-missing automake gsl-bin libgsl-dev
+RUN apt-get install -y --fix-missing automake autoconf gsl-bin libgsl-dev
 
 RUN mkdir /home/lab/fftw
 RUN wget http://www.fftw.org/fftw-3.3.8.tar.gz && tar xzf fftw-3.3.8.tar.gz -C fftw --strip-components 1
@@ -44,7 +44,8 @@ RUN ./configure -L < hlpx_config && make
 ENV LD_LIBRARY_PATH /home/lab/healpix/lib:${LD_LIBRARY_PATH}
 WORKDIR /home/lab
 
-RUN git clone https://github.com/LSSTDESC/NaMaster.git namaster
+RUN mkdir /home/lab/namaster
+RUN wget https://github.com/LSSTDESC/NaMaster/archive/v1.0.1.tar.gz && tar xzf namaster-v1.0.1.tar.gz -C namaster --strip-components 1
 WORKDIR /home/lab/namaster
 RUN pip3 install .
 WORKDIR /home/lab
