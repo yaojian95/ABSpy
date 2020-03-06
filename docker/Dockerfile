@@ -10,7 +10,7 @@ RUN mkdir /home/lab
 WORKDIR /home/lab
 
 #NaMaster
-RUN apt-get gsl-bin libgsl-dev
+RUN apt-get install -y --fix-missing gsl-bin libgsl-dev
 RUN mkdir /home/lab/fftw
 RUN wget http://www.fftw.org/fftw-3.3.8.tar.gz && tar xzf fftw-3.3.8.tar.gz -C fftw --strip-components 1
 WORKDIR fftw
