@@ -1,11 +1,12 @@
-sudo: required
-services:
-  - docker
-
+language: python
+python:
+	- "3.5"
+	- "3.6"
+	- "3.7"
+	- "3.8"
+install:
+	- pip3 install jupyter numpy scipy astropy healpy matplotlib progressbar seaborn pytest nbval
+	- pip3 install .
 script:
-  - docker build -t abspy/ci docker
-  - docker run abspy/ci bash -c "cd /home/lab/abspy; python3 tests/alltests.py"
-  - docker run abspy/ci bash -c "cd /home/lab/abspy/tutorials; pytest --nbval-lax"
-
-after_script:
-  - docker images
+	- python3 tests/alltests.py
+	- cd cd ${TRAVIS_BUILD_DIR}/tutorials pytest --nbval-lax
