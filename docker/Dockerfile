@@ -45,7 +45,7 @@ ENV LD_LIBRARY_PATH /home/lab/healpix/lib:${LD_LIBRARY_PATH}
 WORKDIR /home/lab
 
 RUN mkdir /home/lab/namaster
-RUN wget https://github.com/LSSTDESC/NaMaster/archive/v1.0.1.tar.gz && tar xzf namaster-v1.0.1.tar.gz -C namaster --strip-components 1
+RUN wget https://github.com/LSSTDESC/NaMaster/archive/v1.0.1.tar.gz && tar xzf v1.0.1.tar.gz -C namaster --strip-components 1
 WORKDIR /home/lab/namaster
 RUN pip3 install .
 WORKDIR /home/lab
