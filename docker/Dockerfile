@@ -10,7 +10,7 @@ RUN mkdir /home/lab
 WORKDIR /home/lab
 
 #NaMaster
-RUN apt-get install -y --fix-missing gsl-bin libgsl-dev
+RUN apt-get install -y --fix-missing automake gsl-bin libgsl-dev
 
 RUN mkdir /home/lab/fftw
 RUN wget http://www.fftw.org/fftw-3.3.8.tar.gz && tar xzf fftw-3.3.8.tar.gz -C fftw --strip-components 1
@@ -42,13 +42,6 @@ RUN echo '4\n\
 	> hlpx_config
 RUN ./configure -L < hlpx_config && make
 ENV LD_LIBRARY_PATH /home/lab/healpix/lib:${LD_LIBRARY_PATH}
-WORKDIR /home/lab
-
-RUN mkdir /home/lab/libsharp
-RUN wget https://github.com/Libsharp/libsharp/archive/v1.0.0.tar.gz && tar xzf libsharp-1.0.0.tar.gz -C libsharp --strip-components 1
-WORKDIR /home/lab/libsharp
-RUN autoreconf -i
-RUN ./configure --enable-pic --prefix=/usr/local/ && make && make install
 WORKDIR /home/lab
 
 RUN git clone https://github.com/LSSTDESC/NaMaster.git namaster
