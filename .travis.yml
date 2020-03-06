@@ -9,4 +9,4 @@ install:
   - pip3 install .
 script:
   - python3 tests/alltests.py
-  - cd cd ${TRAVIS_BUILD_DIR}/tutorials pytest --nbval-lax
+  - cd ${TRAVIS_BUILD_DIR}/tutorials pytest --nbval-lax
