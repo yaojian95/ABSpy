@@ -10,41 +10,31 @@ RUN mkdir /home/lab
 WORKDIR /home/lab
 
 #NaMaster
-RUN apt-get install -y --fix-missing automake autoconf gsl-bin libgsl-dev
+RUN apt-get install -y --fix-missing automake autoconf
 
 RUN mkdir /home/lab/fftw
 RUN wget http://www.fftw.org/fftw-3.3.8.tar.gz && tar xzf fftw-3.3.8.tar.gz -C fftw --strip-components 1
 WORKDIR fftw
-RUN ./configure --enable-threads --enable-openmp --enable-shared --prefix=/usr/local/ && make && make install
+RUN ./configure --enable-threads --enable-openmp --enable-shared --prefix=/tmp/local/ && make && make install
+ENV LD_LIBRARY_PATH /tmp/local/lib:${LD_LIBRARY_PATH}
 WORKDIR /home/lab
 
 RUN mkdir /home/lab/cfitsio
 RUN wget http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio_latest.tar.gz && tar xzf cfitsio_latest.tar.gz -C cfitsio --strip-components 1
 WORKDIR /home/lab/cfitsio
-RUN ./configure --prefix=/usr/local/ && make && make install 
+RUN ./configure --prefix=/tmp/local/ && make && make install 
 WORKDIR /home/lab
 
 RUN mkdir /home/lab/healpix
-RUN wget http://downloads.sourceforge.net/project/healpix/Healpix_3.60/Healpix_3.60_2019Dec18.tar.gz && tar xzf Healpix_3.60_2019Dec18.tar.gz -C healpix --strip-components 1
+RUN wget https://sourceforge.net/projects/healpix/files/Healpix_3.60/Healpix_3.60_2019Dec18.tar.gz && tar xzf Healpix_3.60_2019Dec18.tar.gz -C healpix --strip-components 1
 WORKDIR /home/lab/healpix
-# write config file on fly
-RUN echo '4\n\
-	gcc\n\
-	-O3 -fopenmp\n\
-	gcc\n\
-	-O3 -fopenmp\n\
-	g++\n\
-	-O3 -fopenmp\n\
-	/usr/local/include\n\
-	/usr/local/lib\n\
-	y\n\
-	0\n'\
-	> hlpx_config
-RUN ./configure -L < hlpx_config && make
+RUN ./configure --auto=cxx && make
 ENV LD_LIBRARY_PATH /home/lab/healpix/lib:${LD_LIBRARY_PATH}
 WORKDIR /home/lab
 
-RUN git clone https://github.com/LSSTDESC/NaMaster.git namaster
+#RUN git clone https://github.com/LSSTDESC/NaMaster.git namaster
+RUN mkdir /home/lab/namaster
+RUN wget https://github.com/LSSTDESC/NaMaster/archive/v1.0.1.tar.gz && tar xzf v1.0.1.tar.gz -C namaster --strip-components 1
 WORKDIR /home/lab/namaster
 RUN pip3 install .
 WORKDIR /home/lab
@@ -54,3 +44,6 @@ RUN git clone https://github.com/gioacchinowang/ABSpy.git abspy
 WORKDIR /home/lab/abspy
 RUN pip3 install .
 WORKDIR /home/lab
+
+#clean up
+RUN rm *.tar.gz
