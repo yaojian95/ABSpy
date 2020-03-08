@@ -15,14 +15,14 @@ RUN apt-get install -y --fix-missing automake autoconf gsl-bin libgsl-dev
 RUN mkdir /home/lab/fftw
 RUN wget http://www.fftw.org/fftw-3.3.8.tar.gz && tar xzf fftw-3.3.8.tar.gz -C fftw --strip-components 1
 WORKDIR fftw
-RUN ./configure --enable-threads --enable-openmp --enable-shared --prefix=/tmp/local/ && make && make install
-ENV LD_LIBRARY_PATH /tmp/local/lib:${LD_LIBRARY_PATH}
+RUN ./configure --enable-threads --enable-openmp --enable-shared --prefix=/usr/local/ && make && make install
+ENV LD_LIBRARY_PATH /usr/local/lib:${LD_LIBRARY_PATH}
 WORKDIR /home/lab
 
 RUN mkdir /home/lab/cfitsio
 RUN wget http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio_latest.tar.gz && tar xzf cfitsio_latest.tar.gz -C cfitsio --strip-components 1
 WORKDIR /home/lab/cfitsio
-RUN ./configure --prefix=/tmp/local/ && make && make install 
+RUN ./configure --prefix=/usr/local/ && make && make install
 WORKDIR /home/lab
 
 RUN mkdir /home/lab/healpix
