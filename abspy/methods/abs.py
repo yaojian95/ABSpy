@@ -11,7 +11,7 @@ from abspy.tools.icy_decorator import icy
 @icy
 class abssep(object):
     
-    def __init__(self, total_ps, noise_ps, noise_rms, lbin, llist=None, lmax=None, shift=10.0, cut=1.0):
+    def __init__(self, total_ps, noise_ps=None, noise_rms=None, lbin=None, llist=None, lmax=None, shift=10.0, cut=1.0):
         """
         ABS separator class initialization function.
         
@@ -64,6 +64,8 @@ class abssep(object):
         #
         self.shift = shift
         self.cut = cut
+        #
+        self.noise_flag = not (self._noise_ps is None or self._noise_rms is None)
         
     @property
     def total_ps(self):
@@ -101,6 +103,10 @@ class abssep(object):
     def resampling(self):
         return self._resampling
         
+    @property
+    def noise_flag(self):
+        return self._noise_flag
+        
     @total_ps.setter
     def total_ps(self, total_ps):
         assert isinstance(total_ps, np.ndarray)
@@ -112,20 +118,26 @@ class abssep(object):
         
     @noise_ps.setter
     def noise_ps(self, noise_ps):
-        assert isinstance(noise_ps, np.ndarray)
-        assert (noise_ps.shape[0] == self._ps_lmax)
-        assert (noise_ps.shape[1] == self._ps_fmax)
-        assert (noise_ps.shape[1] == noise_ps.shape[2])
+        if noise_ps is None:
+            log.debug('without noise cross-PS')
+        else:
+            assert isinstance(noise_ps, np.ndarray)
+            assert (noise_ps.shape[0] == self._ps_lmax)
+            assert (noise_ps.shape[1] == self._ps_fmax)
+            assert (noise_ps.shape[1] == noise_ps.shape[2])
+            log.debug('noise cross-PS read')
         self._noise_ps = noise_ps
-        log.debug('noise cross-PS read')
         
     @noise_rms.setter
     def noise_rms(self, noise_rms):
-        assert isinstance(noise_rms, np.ndarray)
-        assert (self._ps_lmax == noise_rms.shape[0])
-        assert (self._ps_fmax == noise_rms.shape[1])
+        if noise_rms is None:
+            log.debug('without noise RMS')
+        else:
+            assert isinstance(noise_rms, np.ndarray)
+            assert (self._ps_lmax == noise_rms.shape[0])
+            assert (self._ps_fmax == noise_rms.shape[1])
+            log.debug('noise RMS auto-PS read')
         self._noise_rms = noise_rms
-        log.debug('noise RMS auto-PS read')
     
     @lmax.setter
     def lmax(self, lmax):
@@ -176,6 +188,12 @@ class abssep(object):
         assert (resampling > 0)
         self._resampling = resampling
         log.debug('resampling size set as '+str(self._resampling))
+        
+    @noise_flag.setter
+    def noise_flag(self, noise_flag):
+        assert isinstance(noise_flag, bool)
+        self._noise_flag = noise_flag
+        log.debug('ABS with noise? '+str(self._noise_flag))
         
     @property
     def binell(self):
@@ -278,6 +296,9 @@ class abssep(object):
         return result
     
     def __call__(self):
+        return self.run()
+        
+    def run(self):
         """
         ABS separator class call function.
         
@@ -289,23 +310,30 @@ class abssep(object):
         log.debug('@ abs::__call__')
         # binned average
         _Dl = self.bincps(self._total_ps)
-        _nDl = self.bincps(self._noise_ps)
-        _nrmsDl = self.binaps(self._noise_rms)
+        if (self._noise_flag):
+            _nDl = self.bincps(self._noise_ps)
+            _nrmsDl = self.binaps(self._noise_rms)
         # prepare CMB f(ell, freq)
-        _f = np.ones(_nrmsDl.shape, dtype=np.float64)
-        _f /= _nrmsDl  # rescal f according to noise RMS
-        # Dl_ij = Dl_ij/sqrt(sigma_li,sigma_lj) + shift*f_li*f_lj
-        _Dl -= _nDl
-        for i in range(self._ps_fmax):
-            for j in range(self._ps_fmax):
-                _Dl[:,i,j] = _Dl[:,i,j]/np.sqrt(_nrmsDl[:,i]*_nrmsDl[:,j]) + self._shift*_f[:,i]*_f[:,j]
+        _f = np.ones((self._lbin,self._total_ps.shape[1]), dtype=np.float64)
+        if (self._noise_flag):
+            _f /= _nrmsDl  # rescal f according to noise RMS
+            # Dl_ij = Dl_ij/sqrt(sigma_li,sigma_lj) + shift*f_li*f_lj
+            _Dl -= _nDl
+            for i in range(self._ps_fmax):
+                for j in range(self._ps_fmax):
+                    _Dl[:,i,j] = _Dl[:,i,j]/np.sqrt(_nrmsDl[:,i]*_nrmsDl[:,j]) + self._shift*_f[:,i]*_f[:,j]
+        else:
+            # Dl_ij = Dl_ij + shift*f_li*f_lj
+            for i in range(self._ps_fmax):
+                for j in range(self._ps_fmax):
+                    _Dl[:,i,j] += self._shift*_f[:,i]*_f[:,j]
         # find eign at each angular mode
         _Dbl = list()
         for ell in range(self._lbin):
             # eigvec[:,i] corresponds to eigval[i]
             # note that eigen values may be complex
             eigval, eigvec = np.linalg.eig(_Dl[ell])
-            log.debug('@ abs::__call__, angular mode',self.binell[ell],'with eigen vals',eigval)
+            log.debug('@ abs::__call__, angular mode '+str(self.binell[ell])+' with eigen vals '+str(eigval))
             for i in range(self._ps_fmax):
                 eigvec[:,i] /= np.linalg.norm(eigvec[:,i])**2
             _tmp = 0
