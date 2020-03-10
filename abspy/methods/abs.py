@@ -11,7 +11,7 @@ from abspy.tools.icy_decorator import icy
 @icy
 class abssep(object):
     
-    def __init__(self, total_ps, noise_ps=None, noise_rms=None, lbin=None, llist=None, lmax=None, shift=10.0, cut=1.0):
+    def __init__(self, total_ps, noise_ps=None, noise_rms=None, llist=None, lbin=None, lmax=None, shift=10.0, cut=1.0):
         """
         ABS separator class initialization function.
         
@@ -59,8 +59,8 @@ class abssep(object):
         self.noise_rms = noise_rms
         #
         self.lmax = lmax
-        self.lbin = lbin
         self.llist = llist
+        self.lbin = lbin
         #
         self.shift = shift
         self.cut = cut
@@ -78,18 +78,18 @@ class abssep(object):
     @property
     def noise_rms(self):
         return self._noise_rms
-    
+        
     @property
-    def lbin(self):
-        return self._lbin
+    def lmax(self):
+        return self._lmax
         
     @property
     def llist(self):
         return self._llist
-    
+        
     @property
-    def lmax(self):
-        return self._lmax
+    def lbin(self):
+        return self._lbin
     
     @property
     def shift(self):
@@ -138,12 +138,12 @@ class abssep(object):
             assert (self._ps_fmax == noise_rms.shape[1])
             log.debug('noise RMS auto-PS read')
         self._noise_rms = noise_rms
-    
+        
     @lmax.setter
     def lmax(self, lmax):
         if lmax is not None:
             assert isinstance(lmax, int)
-            assert (lmax > 0 and lmax <= self._ps_lmax)
+            assert (lmax > 0)
             self._lmax = lmax
         else:
             self._lmax = self._ps_lmax
@@ -153,18 +153,20 @@ class abssep(object):
     def llist(self, llist):
         if llist is not None:
             assert isinstance(llist, (list,tuple))
-            assert (len(llist) >= self._lbin)
-            self._llist = [x for x in llist if x <= self._lmax]
+            self._llist = llist
+            self._lmax = max(llist)  # reset lmax
             self._prebin = True  # with pre binned input
         else:
             self._llist = [*range(self._lmax)]
             self._prebin = False
         log.debug('angular modes list set as '+str(self._llist))
-    
+        
     @lbin.setter
     def lbin(self, lbin):
         assert isinstance(lbin, int)
         assert (lbin > 0 and lbin <= self._lmax)
+        if (len(self._llist) < self._lmax):
+            assert (lbin <= len(self._llist))
         self._lbin = lbin
         log.debug('angular mode bin width set as '+str(self._lbin))
         

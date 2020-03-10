@@ -18,7 +18,7 @@ class pstimator(object):
     def __init__(self):
         pass
         
-    def auto_t(maps, mask=None, aposcale=None, binning=None):
+    def auto_t(self, smaps, mask=None, aposcale=None, binning=None):
         """
         Auto PS,
         apply NaMaster estimator to T map with(out) masks,
@@ -60,7 +60,7 @@ class pstimator(object):
         _cl00 = nmt.compute_full_master(_f0, _f0, _b)  # scalar - scalar
         return _b.get_effective_ells(), _cl00[0]
         
-    def cross_t(maps, mask=None, aposcale=None, binning=None):
+    def cross_t(self, maps, mask=None, aposcale=None, binning=None):
         """
         Cross PS,
         apply NaMaster estimator to T map with(out) masks,
@@ -104,7 +104,7 @@ class pstimator(object):
         _cl00 = nmt.compute_full_master(_f01, _f02, _b)  # scalar - scalar
         return _b.get_effective_ells(), _cl00[0]
     
-    def auto_eb(maps, mask=None, aposcale=None, binning=None):
+    def auto_eb(self, maps, mask=None, aposcale=None, binning=None):
         """
         Auto PS,
         apply NaMaster estimator to QU maps with(out) masks,
@@ -148,7 +148,7 @@ class pstimator(object):
         _cl22 = nmt.compute_full_master(_f2, _f2, _b)  # tensor - tensor
         return _b.get_effective_ells(), _cl22[0], _cl22[3]
         
-    def cross_eb(maps, mask=None, aposcale=None, binning=None):
+    def cross_eb(self, maps, mask=None, aposcale=None, binning=None):
         """
         Cross PS,
         apply NaMaster estimator to QU maps with(out) masks,
@@ -195,7 +195,7 @@ class pstimator(object):
         _cl22 = nmt.compute_full_master(_f21, _f22, _b)  # tensor - tensor
         return _b.get_effective_ells(), _cl22[0], _cl22[3]
     
-    def auto_teb(maps, mask=None, aposcale=None, binning=None):
+    def auto_teb(self, maps, mask=None, aposcale=None, binning=None):
         """
         Auto PS,
         apply NaMaster estimator to TQU maps with(out) masks,
@@ -242,7 +242,7 @@ class pstimator(object):
         _cl22 = nmt.compute_full_master(_f2, _f2, _b)  # tensor - tensor
         return _b.get_effective_ells(), _cl00[0], _cl22[0], _cl22[3]
         
-    def cross_teb(maps, mask=None, aposcale=None, binning=None):
+    def cross_teb(self, maps, mask=None, aposcale=None, binning=None):
         """
         Cross PS,
         apply NaMaster estimator to TQU maps with(out) masks,
