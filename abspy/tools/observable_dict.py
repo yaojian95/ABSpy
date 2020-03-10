@@ -156,7 +156,27 @@ class Measurements(ObservableDict):
                     for ptr in range(len(msk)):
                         masked[ptr] *= msk[ptr]
                     self._archive.update({name: masked})
-
+                    
+    def apply_mask_drct(self, name, msk):
+        """
+        An alternative way of applying mask,
+        by deirectly assign the mask to the specific covariance matrix,
+        instead of by matching name tags.
+        
+        Parameters
+        ----------
+        
+        name : string tuple
+            ObservableDict name tag.
+        
+        msk : numpy.ndarray
+            The mask map to be applied.
+        """
+        log.debug('@ observabld_dict::Measurements::apply_mask_drct')
+        masked = deepcopy(self._archive[name])
+        for ptr in range(len(msk)):
+            masked[ptr] *= msk[ptr]
+        self._archive.update({name: masked})
 
 @icy
 class Covariances(ObservableDict):

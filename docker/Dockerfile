@@ -16,7 +16,6 @@ RUN mkdir /home/lab/fftw
 RUN wget http://www.fftw.org/fftw-3.3.8.tar.gz && tar xzf fftw-3.3.8.tar.gz -C fftw --strip-components 1
 WORKDIR fftw
 RUN ./configure --enable-threads --enable-openmp --enable-shared --prefix=/usr/local/ && make && make install
-ENV LD_LIBRARY_PATH /usr/local/lib:${LD_LIBRARY_PATH}
 WORKDIR /home/lab
 
 RUN mkdir /home/lab/cfitsio
@@ -29,7 +28,7 @@ RUN mkdir /home/lab/healpix
 RUN wget https://sourceforge.net/projects/healpix/files/Healpix_3.60/Healpix_3.60_2019Dec18.tar.gz && tar xzf Healpix_3.60_2019Dec18.tar.gz -C healpix --strip-components 1
 WORKDIR /home/lab/healpix
 RUN ./configure --auto=cxx && make
-ENV LD_LIBRARY_PATH /home/lab/healpix/lib:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH /usr/local/lib:/home/lab/healpix/lib:${LD_LIBRARY_PATH}
 WORKDIR /home/lab
 
 RUN git clone https://github.com/LSSTDESC/NaMaster.git namaster
