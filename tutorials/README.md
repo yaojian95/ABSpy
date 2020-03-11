@@ -1,5 +1,7 @@
 ## ABS tutorials
 
-- tutorial 01, the basics of `ObservableDict` class.
+- tutorial 01, the basics of ABS method.
 
-- tutorial 02, estimating auto/cross power-spectra.
+- tutorial 02, mask and pseudo-PS estimation.
+
+- tutorial 03, ABS with mask.
