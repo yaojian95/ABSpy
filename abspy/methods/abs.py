@@ -52,11 +52,6 @@ class abssep(object):
             
         threshold : (positive) float
             The threshold of signal to noise ratio, for information extraction.
-            
-        resampsize : (positive) integer
-            The ensemble size of resampled signal observations,
-            it is a hidden parameter by default 500,
-            and is only activated by given noise.
         """
         log.debug('@ abs::__init__')
         #
@@ -71,7 +66,6 @@ class abssep(object):
         self.threshold = threshold
         #
         self.noise_flag = not (self._noise is None or self._sigma is None)
-        self.resampsize = 500
         
     @property
     def signal(self):
@@ -100,10 +94,6 @@ class abssep(object):
     @property
     def threshold(self):
         return self._threshold
-    
-    @property
-    def resampsize(self):
-        return self._resampsize
         
     @property
     def noise_flag(self):
@@ -170,13 +160,6 @@ class abssep(object):
         assert (threshold > 0)
         self._threshold = threshold
         log.debug('signal to noise threshold set as '+str(self._threshold))
-        
-    @resampsize.setter
-    def resampsize(self, resampsize):
-        assert isinstance(resampsize, int)
-        assert (resampsize > 0)
-        self._resampsize = resampsize
-        log.debug('resampling size set as '+str(self._resampsize))
         
     @noise_flag.setter
     def noise_flag(self, noise_flag):
